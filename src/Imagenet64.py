@@ -1,17 +1,9 @@
 import os
-import random
-
 import numpy as np
-import torch
+import pickle
 from torch.utils.data import Dataset
 from torchvision import transforms
 from PIL import Image
-import pickle
-
-seed = 1
-torch.manual_seed(seed)
-np.random.seed(seed)
-random.seed(seed)
 
 
 class Imagenet64(Dataset):
