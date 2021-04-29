@@ -2,8 +2,6 @@ from lucent.optvis import render, param, transform, objectives
 import torch
 import os
 import numpy as np
-from pytorch_grad_cam import CAM
-from pytorch_grad_cam.utils.image import show_cam_on_image
 
 
 def visualize_filter(model, layer, filters, path, device):

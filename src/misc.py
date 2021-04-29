@@ -16,7 +16,6 @@ from torchvision.models import resnet50
 from pytorch_grad_cam.utils.image import show_cam_on_image
 
 
-
 def get_training_data(learning_rate, mode):
 
     img = np.array(Image.open("dog_cat.png"), np.float32)
