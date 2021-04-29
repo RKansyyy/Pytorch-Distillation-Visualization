@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 from PIL import Image
-from utils import unpickle, imshow
+import pickle
 
 seed = 1
 torch.manual_seed(seed)
@@ -45,26 +45,22 @@ class Imagenet64(Dataset):
 
     def get_data(self):
 
+        print(f'Preparing data batches ({1}/10)')
+        con_data, con_labels = self.load_databatch(1, 64)
         if self.train:
-            print(f'Preparing data batches ({1}/10)')
-            con_data, con_labels = self.load_databatch(1, 64)
-
             for i in range(2, 11):
                 print(f'Preparing data batches ({i}/10)')
                 data, labels = self.load_databatch(i, 64)
                 con_data = np.concatenate((con_data, data), axis=0)
                 con_labels = np.concatenate((con_labels, labels), axis=0)
 
-            return con_data, con_labels
-
-        else:
-            return self.get_val_data(64)
+        return con_data, con_labels
 
     def load_databatch(self, idx, img_size=64):
 
-        data_file = os.path.join(self.root, 'train_data_batch_')
+        data_file = os.path.join(self.root, 'train_data_batch_') if self.train else os.path.join(self.root, 'val_data')
 
-        d = unpickle(data_file + str(idx))
+        d = unpickle(data_file + str(idx)) if self.train else unpickle(data_file)
         x = d['data']
         y = d['labels']
 
@@ -100,42 +96,9 @@ class Imagenet64(Dataset):
 
         return x_train, y_train
 
-    def get_val_data(self, img_size):
 
-        data_file = os.path.join(self.root, 'val_data')
+def unpickle(file):
+    with open(file, 'rb') as fo:
+        dictionary = pickle.load(fo)
 
-        d = unpickle(data_file)
-        x = d['data']
-        y = d['labels']
-
-        data_size = 0
-
-        indices = []
-        for i, label in enumerate(y):
-            if label in self.class_indices:
-                data_size += 1
-                indices.append(i)
-
-        labels_cut = []
-        x_cut = np.ndarray(shape=(data_size, x.shape[1]))
-
-        x_idx = 0
-        for idx in indices:
-            x_cut[x_idx] = x[idx]
-            labels_cut.append(y[idx])
-            x_idx += 1
-
-        img_size2 = img_size * img_size
-
-        x_cut = np.dstack((x_cut[:, :img_size2], x_cut[:, img_size2:2 * img_size2], x_cut[:, 2 * img_size2:]))
-        x_cut = x_cut.reshape((x_cut.shape[0], img_size, img_size, 3))
-
-        # create mirrored images
-        x_train = x_cut[0:data_size, :, :, :]
-        y_train = labels_cut[0:data_size]
-        x_train_flip = x_train[:, :, :, ::-1]
-        y_train_flip = y_train
-        x_train = np.concatenate((x_train, x_train_flip), axis=0)
-        y_train = np.concatenate((y_train, y_train_flip), axis=0)
-
-        return x_train, y_train
+    return dictionary
